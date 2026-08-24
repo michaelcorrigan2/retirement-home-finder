@@ -1,0 +1,79 @@
+{
+  "search_profile": {
+    "locations": [
+      "Murrells Inlet, SC",
+      "North Myrtle Beach, SC",
+      "surrounding communities"
+    ],
+    "property_type": "single_family",
+    "price": {
+      "target_min": 450000,
+      "target_max": 550000,
+      "soft_max": 600000
+    },
+    "square_feet": {
+      "preferred_min": 2000,
+      "preferred_max": 2300,
+      "flexible": true
+    },
+    "bedrooms": {
+      "preferred_min": 3,
+      "preferred_max": 4
+    },
+    "bathrooms": {
+      "preferred_min": 2,
+      "preferred_max": 3
+    },
+    "garage": {
+      "preferred_spaces": 2
+    },
+    "single_story_living": {
+      "required": true
+    },
+    "move_in_ready": {
+      "required": true
+    },
+    "golf": {
+      "required": true
+    },
+    "water_view": {
+      "preferred": true
+    },
+    "community_55_plus": {
+      "strongly_preferred": true,
+      "required": false
+    },
+    "beach": {
+      "preferred_max_drive_minutes": 20
+    },
+    "amenities": {
+      "preferred": [
+        "pool",
+        "clubhouse",
+        "tennis",
+        "pickleball"
+      ]
+    },
+    "fully_furnished": {
+      "bonus": true
+    },
+    "older_home": {
+      "acceptable_if_renovated": true
+    },
+    "flood_risk": {
+      "penalize_high_risk": true
+    },
+    "hoa": {
+      "track": true,
+      "maximum": null
+    }
+  },
+  "scoring": {
+    "top_match_minimum": 85,
+    "worth_considering_minimum": 75
+  },
+  "delivery": {
+    "daily_digest_time": "15:00",
+    "timezone": "America/New_York"
+  }
+}
