@@ -93,3 +93,37 @@ def get_all_properties():
 if __name__ == "__main__":
     print("Database module ready.")
     print("Current properties:", len(get_all_properties()))
+
+
+def rate_property(property_id, rating):
+    allowed = {"love", "maybe", "no"}
+
+    if rating not in allowed:
+        raise ValueError("Invalid rating")
+
+    result = (
+        supabase
+        .table("properties")
+        .update({"rating": rating})
+        .eq("id", property_id)
+        .execute()
+    )
+
+    return result.data
+
+
+def rate_property(property_id, rating):
+    allowed = {"love", "maybe", "no"}
+
+    if rating not in allowed:
+        raise ValueError("Invalid rating")
+
+    result = (
+        supabase
+        .table("properties")
+        .update({"rating": rating})
+        .eq("id", property_id)
+        .execute()
+    )
+
+    return result.data
