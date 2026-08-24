@@ -85,6 +85,13 @@ def get_all_properties():
         if not data.get("date_analyzed"):
             data["date_analyzed"] = row.get("date_analyzed")
 
+        # Include database fields needed by the email/rating system.
+        data["id"] = row.get("id")
+        data["rating"] = row.get("rating")
+
+        if not data.get("listing_url"):
+            data["listing_url"] = row.get("listing_url")
+
         properties.append(data)
 
     return properties
