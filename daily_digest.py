@@ -1,16 +1,6 @@
-import json
-from pathlib import Path
 from datetime import datetime
 
-PROPERTIES_FILE = Path("data/properties.json")
-
-
-def load_properties():
-    if not PROPERTIES_FILE.exists():
-        return []
-
-    with open(PROPERTIES_FILE, "r", encoding="utf-8") as file:
-        return json.load(file)
+from database import get_all_properties
 
 
 def is_today(date_string):
@@ -18,8 +8,12 @@ def is_today(date_string):
         return False
 
     try:
-        analyzed = datetime.fromisoformat(date_string)
+        analyzed = datetime.fromisoformat(
+            date_string.replace("Z", "+00:00")
+        )
+
         return analyzed.date() == datetime.now().date()
+
     except ValueError:
         return False
 
@@ -28,7 +22,6 @@ def format_property(property_data):
     address = property_data.get("address", "Unknown address")
     price = property_data.get("price")
     score = property_data.get("match_score")
-    category = property_data.get("category")
     beds = property_data.get("bedrooms")
     baths = property_data.get("bathrooms")
     sqft = property_data.get("square_feet")
@@ -55,15 +48,17 @@ def format_property(property_data):
     if details:
         lines.append(" | ".join(details))
 
-    water = property_data.get("backyard_water_view")
+    lines.append(
+        "Backyard water view: "
+        + (
+            "Yes"
+            if property_data.get("backyard_water_view")
+            else "Not confirmed"
+        )
+    )
+
     golf = property_data.get("nearest_golf_course")
     golf_distance = property_data.get("golf_distance_miles")
-    furnished = property_data.get("fully_furnished")
-    community_55 = property_data.get("community_55_plus")
-
-    lines.append(
-        f"Backyard water view: {'Yes' if water else 'Not confirmed'}"
-    )
 
     if golf:
         if golf_distance is not None:
@@ -74,11 +69,21 @@ def format_property(property_data):
             lines.append(f"Golf: {golf}")
 
     lines.append(
-        f"55+ community: {'Yes' if community_55 else 'Not confirmed'}"
+        "55+ community: "
+        + (
+            "Yes"
+            if property_data.get("community_55_plus")
+            else "Not confirmed"
+        )
     )
 
     lines.append(
-        f"Fully furnished: {'Yes' if furnished else 'No'}"
+        "Fully furnished: "
+        + (
+            "Yes"
+            if property_data.get("fully_furnished")
+            else "No"
+        )
     )
 
     if url:
@@ -90,7 +95,7 @@ def format_property(property_data):
 
 
 def build_digest():
-    properties = load_properties()
+    properties = get_all_properties()
 
     todays_properties = [
         property_data
@@ -127,17 +132,18 @@ def build_digest():
 
     today = datetime.now().strftime("%B %d, %Y")
 
-    lines = []
-
-    lines.append("RETIREMENT HOME DAILY DIGEST")
-    lines.append(today)
-    lines.append("=" * 60)
-    lines.append("")
+    lines = [
+        "RETIREMENT HOME DAILY DIGEST",
+        today,
+        "=" * 60,
+        ""
+    ]
 
     if not top_matches and not worth_considering:
         lines.append(
             "No new homes met the 75% match threshold today."
         )
+
         return "\n".join(lines)
 
     if top_matches:
@@ -164,7 +170,5 @@ def build_digest():
 
 
 if __name__ == "__main__":
-    digest = build_digest()
-
     print()
-    print(digest)
+    print(build_digest())
