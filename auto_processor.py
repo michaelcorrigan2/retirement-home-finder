@@ -78,22 +78,45 @@ def process_inbox():
             print(f"Research failed: {error}")
             continue
 
-        if research.get("backyard_water_view") is not True:
+        water_evidence = research.get("backyard_water_view")
+
+        if water_evidence is not True:
             record = {
                 **listing,
                 **research,
                 "category": "REJECTED",
                 "match_score": 0,
                 "rejected": True,
-                "rejection_reason": "No confirmed backyard water view",
+                "water_visual_verified": False,
+                "rejection_reason": "No convincing backyard water-view evidence",
                 "date_analyzed": datetime.now().isoformat()
             }
 
             save_property(record)
 
             print("RESULT: REJECTED")
-            print("Reason: No confirmed backyard water view")
+            print("Reason: No convincing backyard water-view evidence")
             continue
+
+        record = {
+            **listing,
+            **research,
+            "category": "PENDING WATER REVIEW",
+            "match_score": None,
+            "rejected": False,
+            "water_visual_verified": False,
+            "rejection_reason": None,
+            "date_analyzed": datetime.now().isoformat()
+        }
+
+        save_property(record)
+
+        print("RESULT: PENDING WATER REVIEW")
+        print(
+            "Reason: Listing text suggests a rear water view, "
+            "but photos must confirm it."
+        )
+        continue
 
         if research.get("single_story") is not True:
             record = {

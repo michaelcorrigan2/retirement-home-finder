@@ -134,3 +134,57 @@ def rate_property(property_id, rating):
     )
 
     return result.data
+
+
+def set_water_review(property_id, approved):
+    if approved not in {True, False}:
+        raise ValueError("approved must be True or False")
+
+    if approved:
+        update_data = {
+            "category": "PENDING FINAL SCORE"
+        }
+    else:
+        update_data = {
+            "category": "REJECTED",
+            "match_score": 0
+        }
+
+    result = (
+        supabase
+        .table("properties")
+        .select("data")
+        .eq("id", property_id)
+        .limit(1)
+        .execute()
+    )
+
+    if not result.data:
+        return []
+
+    data = result.data[0].get("data") or {}
+
+    data["water_visual_verified"] = approved
+
+    if approved:
+        data["category"] = "PENDING FINAL SCORE"
+        data["rejected"] = False
+        data["rejection_reason"] = None
+    else:
+        data["category"] = "REJECTED"
+        data["match_score"] = 0
+        data["rejected"] = True
+        data["rejection_reason"] = (
+            "Backyard water view failed visual review"
+        )
+
+    update_data["data"] = data
+
+    return (
+        supabase
+        .table("properties")
+        .update(update_data)
+        .eq("id", property_id)
+        .execute()
+        .data
+    )

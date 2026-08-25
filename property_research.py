@@ -24,6 +24,7 @@ Return ONLY valid JSON with this exact structure:
   "address": "{address}",
   "backyard_water_view": true | false | null,
   "water_view_type": "pond" | "lake" | "marsh" | "intracoastal" | "river" | "ocean" | "other" | null,
+  "water_view_evidence_type": "explicit_rear_view_text" | "generic_water_text" | "none" | null,
   "single_story": true | false | null,
   "move_in_ready": true | false | null,
   "community_55_plus": true | false | null,
@@ -37,9 +38,13 @@ Return ONLY valid JSON with this exact structure:
 
 Important rules:
 
-- Backyard water view is TRUE only if there is evidence the property itself has water visible from or directly behind the backyard/rear patio/porch/lanai.
-- A community lake, nearby pond, neighborhood water feature, or water somewhere nearby does NOT count.
-- If this cannot be confirmed, use null, not false.
+- Backyard water view is TRUE only when property-specific listing text explicitly states that water is visible from the backyard, rear yard, rear patio, rear porch, screened porch, or lanai.
+- If listing text only says waterfront, pond on lot, lakefront, water nearby, community pond, or similar without saying it is visible from the rear living area, use null.
+- Set water_view_evidence_type to "explicit_rear_view_text" only when the listing explicitly connects the water view to the backyard/rear porch/patio/lanai.
+- Set it to "generic_water_text" when water is mentioned but the actual rear view is not clearly established.
+- Set it to "none" when there is no relevant water evidence.
+- IMPORTANT: even explicit_rear_view_text is only textual evidence. It does NOT mean the view has been visually verified from listing photos.
+- If uncertain, use null rather than true.
 - For single_story, distinguish true one-level living from homes that clearly have bedrooms/living areas upstairs.
 - If a field cannot be verified, use null.
 - Do not guess.
