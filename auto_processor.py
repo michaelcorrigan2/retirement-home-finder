@@ -97,6 +97,63 @@ def process_inbox():
             if listing.get(field) is None and research.get(field) is not None:
                 listing[field] = research[field]
 
+        # ---------------------------------
+        # RESEARCH-STAGE HARD REJECTIONS
+        # ---------------------------------
+
+        if research.get("single_story") is False:
+            record = {
+                **listing,
+                **research,
+                "category": "REJECTED",
+                "match_score": 0,
+                "rejected": True,
+                "rejection_reason": "Property is not single-story living",
+                "date_analyzed": datetime.now().isoformat()
+            }
+
+            save_property(record)
+
+            print("RESULT: REJECTED")
+            print("Reason: Property is not single-story living")
+            continue
+
+        if research.get("move_in_ready") is False:
+            record = {
+                **listing,
+                **research,
+                "category": "REJECTED",
+                "match_score": 0,
+                "rejected": True,
+                "rejection_reason": "Property is not move-in ready",
+                "date_analyzed": datetime.now().isoformat()
+            }
+
+            save_property(record)
+
+            print("RESULT: REJECTED")
+            print("Reason: Property is not move-in ready")
+            continue
+
+        garage_spaces = research.get("garage_spaces")
+
+        if garage_spaces is not None and garage_spaces < 2:
+            record = {
+                **listing,
+                **research,
+                "category": "REJECTED",
+                "match_score": 0,
+                "rejected": True,
+                "rejection_reason": "Garage is smaller than 2 cars",
+                "date_analyzed": datetime.now().isoformat()
+            }
+
+            save_property(record)
+
+            print("RESULT: REJECTED")
+            print("Reason: Garage is smaller than 2 cars")
+            continue
+
         water_evidence = research.get("backyard_water_view")
 
         if water_evidence is not True:
