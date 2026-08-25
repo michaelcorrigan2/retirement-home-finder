@@ -188,3 +188,52 @@ def set_water_review(property_id, approved):
         .execute()
         .data
     )
+
+
+def get_property_by_id(property_id):
+    result = (
+        supabase
+        .table("properties")
+        .select("*")
+        .eq("id", property_id)
+        .limit(1)
+        .execute()
+    )
+
+    if not result.data:
+        return None
+
+    row = result.data[0]
+    data = row.get("data") or {}
+
+    data["id"] = row.get("id")
+    data["rating"] = row.get("rating")
+
+    if not data.get("address"):
+        data["address"] = row.get("address")
+
+    if not data.get("listing_url"):
+        data["listing_url"] = row.get("listing_url")
+
+    return data
+
+
+def update_property_record(property_id, record):
+    row = {
+        "address": record.get("address"),
+        "listing_url": record.get("listing_url"),
+        "match_score": record.get("match_score"),
+        "category": record.get("category"),
+        "data": record,
+        "date_analyzed": record.get("date_analyzed")
+    }
+
+    result = (
+        supabase
+        .table("properties")
+        .update(row)
+        .eq("id", property_id)
+        .execute()
+    )
+
+    return result.data

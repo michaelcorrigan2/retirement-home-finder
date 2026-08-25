@@ -85,17 +85,29 @@ def water_review():
             property_id,
             approved
         )
+
+        if not result:
+            return "Property not found.", 404
+
+        final_result = None
+
+        if approved:
+            from finalize_property import finalize_property
+
+            final_result = finalize_property(
+                property_id
+            )
+
     except Exception as error:
         return f"Unable to save water review: {error}", 500
 
-    if not result:
-        return "Property not found.", 404
-
     if approved:
         title = "✅ Water view confirmed"
+
         message = (
-            "This property can now move forward "
-            "to final scoring."
+            f"Final scoring complete: "
+            f"{final_result.get('match_score')}% — "
+            f"{final_result.get('category')}."
         )
     else:
         title = "❌ Water view rejected"
