@@ -1,3 +1,5 @@
+from preference_learning import calculate_preference_adjustments
+
 def calculate_final_score(property_data):
     score = 100
     reasons = []
@@ -156,6 +158,41 @@ def calculate_final_score(property_data):
     elif flood == "moderate":
         score -= 5
         reasons.append("Moderate flood-risk penalty")
+
+
+    # ----------------------------
+    # LEARNED SOFT PREFERENCES
+    # ----------------------------
+
+    learning = calculate_preference_adjustments()
+
+    if learning.get("ready"):
+        adjustments = learning.get("adjustments", {})
+
+        for feature, adjustment in adjustments.items():
+
+            if feature.startswith("amenity:"):
+                amenity = feature.split(":", 1)[1]
+
+                if amenity in (property_data.get("amenities") or []):
+                    score += adjustment
+
+                    reasons.append(
+                        f"Learned preference adjustment: "
+                        f"{amenity} "
+                        f"{'+' if adjustment > 0 else ''}"
+                        f"{adjustment}"
+                    )
+
+            elif property_data.get(feature) is True:
+                score += adjustment
+
+                reasons.append(
+                    f"Learned preference adjustment: "
+                    f"{feature.replace('_', ' ')} "
+                    f"{'+' if adjustment > 0 else ''}"
+                    f"{adjustment}"
+                )
 
     score = max(0, min(round(score), 100))
 
