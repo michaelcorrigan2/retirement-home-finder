@@ -1,5 +1,7 @@
 from datetime import datetime
 
+from search_areas import location_allowed
+
 from email_to_listings import get_unique_listings
 from property_research import research_property
 from location_enrichment import (
@@ -7,6 +9,7 @@ from location_enrichment import (
     get_beach_enrichment
 )
 from final_scoring import calculate_final_score
+from beach_drive_time import get_beach_drive_enrichment
 from database import property_exists, save_property
 
 
@@ -47,6 +50,10 @@ def process_inbox():
         print()
         print(address)
         print("-" * 70)
+
+        if not location_allowed(address):
+            print("Outside approved search area — skipping.")
+            continue
 
         if property_exists(address):
             print("Already processed — skipping.")
@@ -140,12 +147,14 @@ def process_inbox():
 
         golf = get_golf_enrichment(address)
         beach = get_beach_enrichment(address)
+        beach_drive = get_beach_drive_enrichment(address)
 
         property_data = {
             **listing,
             **research,
             **golf,
             **beach,
+            **beach_drive,
             "property_type": "single_family",
             "multi_story": (
                 False if research.get("single_story") is True else None

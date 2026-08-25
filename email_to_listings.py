@@ -8,8 +8,17 @@ SUPPORTED_CITIES = (
     "North Myrtle Beach",
     "Surfside Beach",
     "Garden City",
+    "Garden City Beach",
     "Pawleys Island",
-    "Little River"
+    "Litchfield Beach",
+    "Little River",
+    "Longs",
+    "Socastee",
+    "Burgess",
+    "Prince Creek",
+    "Carolina Forest",
+    "Georgetown",
+    "Myrtle Beach"
 )
 
 

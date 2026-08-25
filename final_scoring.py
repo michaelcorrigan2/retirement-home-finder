@@ -13,11 +13,6 @@ def calculate_final_score(property_data):
     if property_data.get("move_in_ready") is False:
         return 0, "REJECTED", ["Home does not appear move-in ready"]
 
-    address = (property_data.get("address") or "").lower()
-
-    if "myrtle beach" in address and "north myrtle beach" not in address:
-        return 0, "REJECTED", ["Located directly in Myrtle Beach"]
-
     if property_data.get("backyard_water_view") is not True:
         return 0, "REJECTED", ["No confirmed backyard water view"]
 
@@ -111,19 +106,40 @@ def calculate_final_score(property_data):
         score -= 5
         reasons.append("Golf proximity not verified")
 
-    beach_distance = property_data.get("beach_distance_miles")
+    beach_minutes = property_data.get("beach_drive_minutes")
 
-    if beach_distance is not None:
-        if beach_distance <= 5:
+    if beach_minutes is not None:
+        if beach_minutes <= 10:
             score += 4
-            reasons.append("Excellent beach proximity")
-        elif beach_distance <= 10:
-            score += 1
-            reasons.append("Good beach proximity")
-        elif beach_distance <= 15:
-            score -= 3
+            reasons.append(
+                f"Excellent beach access ({beach_minutes} min drive)"
+            )
+        elif beach_minutes <= 15:
+            score += 2
+            reasons.append(
+                f"Very good beach access ({beach_minutes} min drive)"
+            )
+        elif beach_minutes <= 20:
+            reasons.append(
+                f"Within preferred beach drive ({beach_minutes} min)"
+            )
+        elif beach_minutes <= 25:
+            score -= 5
+            reasons.append(
+                f"Slightly beyond preferred beach drive ({beach_minutes} min)"
+            )
         else:
-            score -= 7
+            score -= 10
+            reasons.append(
+                f"Too far from preferred beach access ({beach_minutes} min)"
+            )
+    else:
+        beach_distance = property_data.get("beach_distance_miles")
+
+        if beach_distance is not None:
+            reasons.append(
+                "Beach drive time unavailable; distance used as fallback"
+            )
 
     amenities = set(property_data.get("amenities") or [])
     preferred = {"pool", "clubhouse", "tennis", "pickleball"}
