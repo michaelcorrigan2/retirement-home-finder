@@ -85,6 +85,18 @@ def process_inbox():
             print(f"Research failed: {error}")
             continue
 
+        # Fill missing listing-email details with verified web research.
+        # Preserve values already extracted from the original listing email.
+        for field in [
+            "price",
+            "bedrooms",
+            "bathrooms",
+            "square_feet",
+            "year_built",
+        ]:
+            if listing.get(field) is None and research.get(field) is not None:
+                listing[field] = research[field]
+
         water_evidence = research.get("backyard_water_view")
 
         if water_evidence is not True:

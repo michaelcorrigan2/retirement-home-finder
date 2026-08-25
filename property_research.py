@@ -22,6 +22,11 @@ Return ONLY valid JSON with this exact structure:
 
 {{
   "address": "{address}",
+  "price": integer | null,
+  "bedrooms": integer | null,
+  "bathrooms": number | null,
+  "square_feet": integer | null,
+  "year_built": integer | null,
   "backyard_water_view": true | false | null,
   "water_view_type": "pond" | "lake" | "marsh" | "intracoastal" | "river" | "ocean" | "other" | null,
   "water_view_evidence_type": "explicit_rear_view_text" | "generic_water_text" | "none" | null,
@@ -37,6 +42,12 @@ Return ONLY valid JSON with this exact structure:
 }}
 
 Important rules:
+
+- Verify price, bedrooms, bathrooms, square footage, and year built from current property-specific listing sources when available.
+- Prefer current MLS/brokerage/listing data over old sale records.
+- For price, return the current asking price, not a previous sale price.
+- For square_feet, return the listed living area, not lot size.
+- If sources conflict materially, prefer the most recent current listing and mention the conflict in evidence_summary.
 
 - Backyard water view is TRUE only when property-specific listing text explicitly states that water is visible from the backyard, rear yard, rear patio, rear porch, screened porch, or lanai.
 - If listing text only says waterfront, pond on lot, lakefront, water nearby, community pond, or similar without saying it is visible from the rear living area, use null.
