@@ -199,7 +199,7 @@ def is_listing_alert(source, subject, body):
     )
 
 
-def fetch_listing_emails(limit=50):
+def fetch_listing_emails(limit=250):
     mail = imaplib.IMAP4_SSL(
         "imap.gmail.com"
     )
