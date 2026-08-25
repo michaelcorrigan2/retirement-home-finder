@@ -29,28 +29,56 @@ def parse_realtor_email(body):
         re.escape(city) for city in SUPPORTED_CITIES
     )
 
+    # Realtor emails can contain many properties from different
+    # searches. Parse each "For sale" property separately so data
+    # from unrelated listings cannot bleed into the next listing.
+    chunks = re.split(
+        r"(?=For sale\s+\$)",
+        body,
+        flags=re.IGNORECASE
+    )
+
     pattern = re.compile(
-        rf"For sale\s*"
-        rf"\$([\d,]+)\s*"
+        rf"^For sale\s*"
+        rf"\$([\d,]+)"
+        rf"(?:\s+\$[\d,]+)*\s*"
         rf"(\d+)\s*bed\s*"
         rf"(\d+(?:\.\d+)?)\s*bath\s*"
         rf"([\d,]+)\s*sqft\s*"
-        rf"(.+?)\s+"
+        rf"(.{{1,140}}?)\s+"
         rf"({city_pattern}),\s*SC\s*(\d{{5}})",
         re.IGNORECASE
     )
 
-    for match in pattern.finditer(body):
-        price = int(match.group(1).replace(",", ""))
+    for chunk in chunks:
+        chunk = re.sub(r"\s+", " ", chunk).strip()
+
+        if not chunk.lower().startswith("for sale"):
+            continue
+
+        match = pattern.search(chunk)
+
+        if not match:
+            continue
+
+        price = int(
+            match.group(1).replace(",", "")
+        )
+
         beds = int(match.group(2))
         baths = float(match.group(3))
-        sqft = int(match.group(4).replace(",", ""))
+
+        sqft = int(
+            match.group(4).replace(",", "")
+        )
 
         street = match.group(5).strip()
         city = match.group(6).strip()
         zipcode = match.group(7)
 
-        address = f"{street}, {city}, SC {zipcode}"
+        address = (
+            f"{street}, {city}, SC {zipcode}"
+        )
 
         listings.append({
             "source": "Realtor.com",
