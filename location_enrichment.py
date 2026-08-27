@@ -1,6 +1,7 @@
 import math
 import requests
-from geopy.geocoders import Nominatim
+from golf_reference import GOLF_COURSES
+from geopy.geocoders import Nominatim, ArcGIS
 
 
 USER_AGENT = "retirement-home-finder/1.0"
@@ -94,19 +95,105 @@ def geocode_with_osm(address):
         return None
 
 
+def clean_geocode_address(address):
+    import re
+
+    cleaned = address
+
+    # Remove builder/model wording that often confuses geocoders.
+    cleaned = re.sub(
+        r"\\bLot\\s+\\d+\\b",
+        "",
+        cleaned,
+        flags=re.IGNORECASE
+    )
+
+    cleaned = re.sub(
+        r"\\b(Unit|Apt|Apartment|Suite)\\s+[A-Za-z0-9-]+\\b",
+        "",
+        cleaned,
+        flags=re.IGNORECASE
+    )
+
+    # Remove common builder model names appearing between
+    # the street address and city.
+    cleaned = re.sub(
+        r"\\s{2,}",
+        " ",
+        cleaned
+    )
+
+    cleaned = cleaned.replace(" ,", ",")
+
+    return cleaned.strip()
+
+
+def geocode_with_arcgis(address):
+    try:
+        geolocator = ArcGIS(
+            timeout=15
+        )
+
+        location = geolocator.geocode(
+            address
+        )
+
+        if not location:
+            return None
+
+        return {
+            "latitude": location.latitude,
+            "longitude": location.longitude,
+            "geocoder": "ArcGIS"
+        }
+
+    except Exception as error:
+        print(f"ArcGIS geocoder error: {error}")
+        return None
+
+
+_GEOCODE_CACHE = {}
+
+
 def geocode_address(address):
+    if not address:
+        return None
 
-    result = geocode_with_census(address)
+    if address in _GEOCODE_CACHE:
+        return _GEOCODE_CACHE[address]
 
-    if result:
-        return result
+    candidates = [
+        address,
+        clean_geocode_address(address)
+    ]
 
-    result = geocode_with_osm(address)
+    # Remove duplicates while preserving order.
+    candidates = list(dict.fromkeys(candidates))
 
-    if result:
-        return result
+    for candidate in candidates:
+
+        result = geocode_with_census(candidate)
+
+        if result:
+            _GEOCODE_CACHE[address] = result
+            return result
+
+        result = geocode_with_osm(candidate)
+
+        if result:
+            _GEOCODE_CACHE[address] = result
+            return result
+
+        result = geocode_with_arcgis(candidate)
+
+        if result:
+            _GEOCODE_CACHE[address] = result
+            return result
 
     return None
+
+
+_GOLF_CACHE = {}
 
 
 def find_nearby_golf_courses(
@@ -114,84 +201,33 @@ def find_nearby_golf_courses(
     longitude,
     radius_meters=12000
 ):
-    query = f"""
-    [out:json][timeout:20];
-    (
-      way["leisure"="golf_course"](around:{radius_meters},{latitude},{longitude});
-      relation["leisure"="golf_course"](around:{radius_meters},{latitude},{longitude});
-      node["leisure"="golf_course"](around:{radius_meters},{latitude},{longitude});
-    );
-    out center tags;
-    """
+    # Deterministic local golf lookup.
+    # Avoids unreliable public Overpass servers.
 
-    endpoints = [
-        "https://overpass-api.de/api/interpreter",
-        "https://overpass.private.coffee/api/interpreter"
-    ]
-
-    headers = {
-        "User-Agent": "retirement-home-finder/1.0",
-        "Accept": "application/json"
-    }
-
-    data = None
-
-    for endpoint in endpoints:
-        try:
-            response = requests.get(
-                endpoint,
-                params={"data": query},
-                headers=headers,
-                timeout=30
-            )
-
-            response.raise_for_status()
-            data = response.json()
-            break
-
-        except Exception as error:
-            print(f"Golf lookup retry: {error}")
-
-    if data is None:
-        return []
+    radius_miles = radius_meters / 1609.344
 
     courses = []
 
-    for element in data.get("elements", []):
-        tags = element.get("tags", {})
-        name = tags.get("name")
-
-        if not name:
-            continue
-
-        if "lat" in element and "lon" in element:
-            lat = element["lat"]
-            lon = element["lon"]
-        else:
-            center = element.get("center", {})
-            lat = center.get("lat")
-            lon = center.get("lon")
-
-        if lat is None or lon is None:
-            continue
-
+    for course in GOLF_COURSES:
         distance = haversine_miles(
             latitude,
             longitude,
-            lat,
-            lon
+            course["latitude"],
+            course["longitude"]
         )
 
-        courses.append({
-            "name": name,
-            "distance_miles": round(distance, 2)
-        })
+        if distance <= radius_miles:
+            courses.append({
+                "name": course["name"],
+                "distance_miles": round(distance, 2)
+            })
 
     courses.sort(
         key=lambda item: item["distance_miles"]
     )
 
     return courses
+
 
 BEACH_POINTS = [
     {
